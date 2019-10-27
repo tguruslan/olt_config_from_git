@@ -63,5 +63,4 @@ for key, val in sorted(port_mac.items()):
 for key, val in sorted(port_vlan.items()):
     for i in range(65):
         if val.get(i, None):
-            print('interface EPON0/{pon}:{llid}\n  description {desc}\n  epon onu port 1 ctc vlan mode tag {vlan} priority 0'.format(llid=i,pon=key,vlan=val[i],desc=port_desc[key].get(i, None)))
-            print('!')
+            print('interface EPON0/{pon}:{llid}\n  description {desc}\n  epon onu port 1 ctc vlan mode tag {vlan} priority 0\n!'.format(llid=i,pon=key,vlan=val[i],desc=port_desc[key].get(i, None)))
