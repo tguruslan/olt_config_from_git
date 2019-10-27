@@ -16,60 +16,41 @@ port_desc = defaultdict(dict)
 port_vlan[0]=port_mac[0]=port_desc[0]={}
 
 
-# ============================ читаєм файл =====================================
+# ================================ читаєм файл =================================
 
 data=os.popen('git --no-pager --git-dir {folder}.git log -p -- {file}'.format(file=re.sub(r'.*/', '', sys.argv[1]),folder=re.sub(r'[^/]*$', '', sys.argv[1]))).read()
 
 
-# ============================ робимо асоціацію PON->LLID=VLAN ==================
+# ================= робимо асоціацію PON->LLID=VLAN|MAC|DESCRIPTION ============
 
 for row in data.split('\n'):
     if row.find('interface EPON') != -1:
         if row.find(':') != -1:
             epon=int(row.split('/')[1].split(':')[0])
             llid=int(row.split(':')[1])
+        else:
+            epon=int(row.split('/')[1])
     if row.find('!') != -1:
         epon=llid=0
     if row.find('vlan mode tag') != -1:
         splited = re.sub(r'^\+|^\-', '', row).split()
         if splited[0] == 'epon':
             port_vlan[epon][llid] = splited[8]
-
-
-# ============================ робимо асоціацію PON->LLID=MAC ===================
-
-for row in data.split('\n'):
-    if row.find('interface EPON') != -1:
-        if row.find(':') == -1:
-            epon=int(row.split('/')[1])
-    if row.find('!') != -1:
-        epon=0
+    if row.find('description') != -1:
+        splited = re.sub(r'^\+|^\-', '', row).split()
+        if splited[0] == 'description':
+            port_desc[epon][llid] = splited[1]
     if row.find('bind-onu') != -1:
         splited = re.sub(r'^\+|^\-', '', row).split()
         port_mac[epon][splited[4]] = splited[3]
 
 
-# ============================ робимо асоціацію PON->LLID=DESCRIPTION ================
-
-for row in data.split('\n'):
-    if row.find('interface EPON') != -1:
-        if row.find(':') != -1:
-            epon=int(row.split('/')[1].split(':')[0])
-            llid=int(row.split(':')[1])
-    if row.find('!') != -1:
-        epon=llid=0
-    if row.find('description') != -1:
-        splited = re.sub(r'^\+|^\-', '', row).split()
-        if splited[0] == 'description':
-            port_desc[epon][llid] = splited[1]
-
-
-# ============================ видаляємо неправильні асоціації =================
+# ====================== видаляємо неправильні асоціації =======================
 
 del port_vlan[0], port_mac[0], port_desc[0]
 
 
-# ============================ генеруємо кофігурацію привязки ONU ==============
+# ===================== генеруємо кофігурацію привязки ONU =====================
 
 for key, val in sorted(port_mac.items()):
     print('interface EPON0/{pon}'.format(pon=key))
@@ -79,7 +60,7 @@ for key, val in sorted(port_mac.items()):
     print('!')
 
 
-# ============================ генеруємо налаштування на ONU ===================
+# ========================== генеруємо налаштування на ONU =====================
 
 for key, val in sorted(port_vlan.items()):
     for i in range(65):
