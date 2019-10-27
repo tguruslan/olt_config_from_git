@@ -32,16 +32,14 @@ for row in data.split('\n'):
             epon=int(row.split('/')[1])
     if row.find('!') != -1:
         epon=llid=0
+    splited = re.sub(r'^\+|^\-', '', row).split()
     if row.find('vlan mode tag') != -1:
-        splited = re.sub(r'^\+|^\-', '', row).split()
         if splited[0] == 'epon':
             port_vlan[epon][llid] = splited[8]
     if row.find('description') != -1:
-        splited = re.sub(r'^\+|^\-', '', row).split()
         if splited[0] == 'description':
             port_desc[epon][llid] = splited[1]
     if row.find('bind-onu') != -1:
-        splited = re.sub(r'^\+|^\-', '', row).split()
         port_mac[epon][splited[4]] = splited[3]
 
 
